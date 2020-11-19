@@ -1,0 +1,34 @@
+DPDK_17.11 {
+	global:
+
+	rte_vswitch_open;
+	rte_vswitch_close;
+	rte_vswitch_register_vport;
+	rte_vswitch_deregister_vport;
+	rte_vswitch_modify_offload_flow;
+	rte_vswitch_create_offload_flow;
+	rte_vswitch_destroy_offload_flow;
+	rte_vswitch_get_vport_metadata;
+	rte_vswitch_translate_mark_id;
+	rte_vswitch_flush_vport_offload_flows;
+	rte_vswitch_offload_flow_query;
+	rte_vswitch_hotplug_restart;
+	rte_vswitch_vport_configure;
+	rte_vswitch_vport_isolate;
+	rte_vswitch_vport_rx_queue_setup;
+	rte_vswitch_vport_tx_queue_setup;
+
+	rte_vswitch_dump;
+	rte_vswitch_aging_pressure;
+
+	rte_vswitch_create_meter;
+	rte_vswitch_update_meter;
+	rte_vswitch_query_meter;
+	rte_vswitch_destroy_meter;
+
+	rte_vswitch_print_offload_flow_params;
+	rte_vswitch_flush_all;
+	rte_vswitch_offload_flow_stats_query;
+
+	local: *;
+};
