@@ -1459,9 +1459,31 @@ mlx5_empw_close(struct mlx5_txq_data *txq, struct mlx5_mpw *mpw)
 	return ret;
 }
 
+#if BURST_DETECTION
+
+	struct ghy_mlx5_data mlx5_test[12]={
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0},
+		{0, NULL, 0, 0, 0}
+	};
+//	struct ghy_rxq_data * qdetection = mlx5_test;
+#endif
+
 /**
- * TX with Enhanced MPW support.
+ * TX with Enhanced MPW support.  允许在一个描述符中打进多个数据包
  *
+ * allow the TX burst function to pack up multiple packets in a single descriptor session in
+ * order to save PCI bandwidth and improve performance at the cost of a sligthly highter CPU usage.
+ *  
  * @param txq
  *   Pointer to TX queue structure.
  * @param[in] pkts
@@ -1476,6 +1498,7 @@ static inline uint16_t
 txq_burst_empw(struct mlx5_txq_data *txq, struct rte_mbuf **pkts,
 	       uint16_t pkts_n)
 {
+	//printf("66666\n");  cx5网卡发包函数走的是这里
 	uint16_t elts_head = txq->elts_head;
 	const uint16_t elts_n = 1 << txq->elts_n;
 	const uint16_t elts_m = elts_n - 1;
@@ -1491,12 +1514,28 @@ txq_burst_empw(struct mlx5_txq_data *txq, struct rte_mbuf **pkts,
 		.state = MLX5_MPW_STATE_CLOSED,
 	};
 
+
 	if (unlikely(!pkts_n))
 		return 0;
+
 	/* Start processing. */
 	mlx5_tx_complete(txq);
-	max_elts = (elts_n - (elts_head - txq->elts_tail));
-	max_wqe = (1u << txq->wqe_n) - (txq->wqe_ci - txq->wqe_pi);
+
+	#if BURST_DETECTION
+	struct ghy_mlx5_data * ghy_lcore;
+	uint32_t lcore_id;
+	lcore_id = rte_lcore_id();
+	ghy_lcore = &mlx5_test[lcore_id];
+	ghy_lcore -> ghy_wqe_pi = txq->wqe_pi;
+	ghy_lcore -> ghy_wqe_ci = txq->wqe_ci;
+	#endif
+
+	max_elts = (elts_n - (elts_head - txq->elts_tail));//这是什么意思？ 貌似是txd的大小
+	max_wqe = (1u << txq->wqe_n) - (txq->wqe_ci - txq->wqe_pi);//这代表什么意思？WQ的大小？
+	//printf("wqe_n:%d",txq->wqe_n);
+	//printf("max_elts:%d  max:wqe:%d  \n",max_elts, max_wqe); 2048,16384
+	//printf("%d——%d——%d——%d  ",txq->wqe_ci,txq->wqe_pi,txq->cqe_n,ghy_lcore -> ghy_wqe_pi);
+
 	if (unlikely(!max_wqe))
 		return 0;
 	do {
@@ -1523,6 +1562,7 @@ txq_burst_empw(struct mlx5_txq_data *txq, struct rte_mbuf **pkts,
 		 * - next packet can be inlined with a new WQE
 		 * - cs_flag differs
 		 */
+
 		if (mpw.state == MLX5_MPW_ENHANCED_STATE_OPENED) {
 			if ((inl_pad + sizeof(struct mlx5_wqe_data_seg) >
 			     mpw_room) ||
@@ -1546,7 +1586,7 @@ txq_burst_empw(struct mlx5_txq_data *txq, struct rte_mbuf **pkts,
 			if (unlikely(max_wqe * MLX5_WQE_SIZE < mpw_room))
 				break;
 			/* Don't pad the title WQEBB to not waste WQ. */
-			mlx5_empw_new(txq, &mpw, 0);
+			mlx5_empw_new(txq, &mpw, 0); //主要获取wqe的地址
 			mpw_room -= mpw.total_len;
 			inl_pad = 0;
 			do_inline = length <= txq->inline_max_packet_sz &&

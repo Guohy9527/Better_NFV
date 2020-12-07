@@ -93,7 +93,7 @@
 	(RTE_MIN(MLX5_VPMD_RX_MAX_BURST, (unsigned int)(n) >> 2))
 
 /* Maximum size of burst for vectorized Rx. */
-#define MLX5_VPMD_RX_MAX_BURST 64U
+#define MLX5_VPMD_RX_MAX_BURST 32U
 
 /*
  * Maximum size of burst for vectorized Tx. This is related to the maximum size

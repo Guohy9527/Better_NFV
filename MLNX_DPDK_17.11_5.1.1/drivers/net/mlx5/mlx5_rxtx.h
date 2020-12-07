@@ -595,8 +595,9 @@ mlx5_tx_complete(struct mlx5_txq_data *txq)
 	unsigned int blk_n = 0;
 
 	cqe = &(*txq->cqes)[cq_ci & cqe_cnt];
-	if (unlikely(check_cqe(cqe, cqe_n, cq_ci)))
+	if (unlikely(check_cqe(cqe, cqe_n, cq_ci))){
 		return;
+	}
 #ifndef NDEBUG
 	if ((MLX5_CQE_OPCODE(cqe->op_own) == MLX5_CQE_RESP_ERR) ||
 	    (MLX5_CQE_OPCODE(cqe->op_own) == MLX5_CQE_REQ_ERR)) {
@@ -615,6 +616,7 @@ mlx5_tx_complete(struct mlx5_txq_data *txq)
 	ctrl = (volatile struct mlx5_wqe_ctrl *)
 		tx_mlx5_wqe(txq, txq->wqe_pi);
 	elts_tail = ctrl->ctrl3;
+	//printf("%d  ",cq_ci);
 	assert((elts_tail & elts_m) < (1 << txq->wqe_n));
 	/* Free buffers. */
 	while (elts_free != elts_tail) {
@@ -937,5 +939,19 @@ txq_count_contig_multi_seg(struct rte_mbuf **pkts, uint16_t pkts_n)
 			break;
 	return pos;
 }
+
+#define BURST_DETECTION	 1
+
+#if BURST_DETECTION
+	struct ghy_mlx5_data
+	{
+		unsigned int ghy_rq_ci;
+		volatile struct mlx5_cqe * ghy_cq;
+		uint16_t ghy_q_n;
+		uint16_t ghy_wqe_pi;
+		uint16_t ghy_wqe_ci;
+	};
+//	struct ghy_rxq_data * qdetection = mlx5_test;
+#endif
 
 #endif /* RTE_PMD_MLX5_RXTX_H_ */

@@ -652,6 +652,14 @@ rxq_cq_to_ptype_oflags_v(struct mlx5_rxq_data *rxq, __m128i cqes[4],
 	_mm_store_si128((__m128i *)&pkts[3]->rearm_data, rearm3);
 }
 
+
+#if BURST_DETECTION
+
+extern struct ghy_mlx5_data mlx5_test[12];
+
+//	struct ghy_rxq_data * qdetection = mlx5_test;
+#endif
+
 /**
  * Receive burst of packets. An errored completion also consumes a mbuf, but the
  * packet_type is set to be RTE_PTYPE_ALL_MASK. Marked mbufs should be freed
@@ -735,6 +743,17 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 	rte_prefetch0(cq + 2);
 	rte_prefetch0(cq + 3);
 	pkts_n = RTE_MIN(pkts_n, MLX5_VPMD_RX_MAX_BURST);
+	
+	#if BURST_DETECTION
+	struct ghy_mlx5_data * ghy_lcore;
+	uint32_t lcore_id;
+	lcore_id = rte_lcore_id();
+	ghy_lcore = &mlx5_test[lcore_id];
+	ghy_lcore -> ghy_cq = &(*rxq->cqes)[0];
+	ghy_lcore -> ghy_rq_ci = rxq->rq_ci;
+	ghy_lcore -> ghy_q_n = q_n;
+	#endif
+
 	/*
 	 * Order of indexes:
 	 *   rq_ci >= cq_ci >= rq_pi
@@ -764,6 +783,8 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 		return rcvd_pkt;
 	/* At this point, there shouldn't be any remained packets. */
 	assert(rxq->rq_pi == rxq->cq_ci);
+
+
 	/*
 	 * A. load first Qword (8bytes) in one loop.
 	 * B. copy 4 mbuf pointers from elts ring to returing pkts.
