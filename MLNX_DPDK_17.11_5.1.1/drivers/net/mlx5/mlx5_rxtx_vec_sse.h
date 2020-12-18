@@ -655,7 +655,7 @@ rxq_cq_to_ptype_oflags_v(struct mlx5_rxq_data *rxq, __m128i cqes[4],
 
 #if BURST_DETECTION
 
-extern struct ghy_mlx5_data mlx5_test[12];
+extern struct ghy_mlx5_data mlx5_test[RTE_MAX_LCORE];
 
 //	struct ghy_rxq_data * qdetection = mlx5_test;
 #endif

@@ -285,10 +285,6 @@ init_lcore_rx_queues(void)
 {
 	uint16_t i, nb_rx_queue;
 	uint8_t lcore;
-/////////////////待测试///////////////////////////
-	// lcore_conf = rte_zmalloc(NULL,
-	// 		sizeof(struct lcore_conf) * RTE_MAX_LCORE,
-	// 		RTE_CACHE_LINE_SIZE);
 
 	for (i = 0; i < nb_lcore_params; ++i) {
 		lcore = lcore_params[i].lcore_id;
@@ -1066,26 +1062,24 @@ main(int argc, char **argv)
 	uint16_t port_id_test = 0;
 	int res, i_fdir;
 
-	for(i_fdir=0;i_fdir<100;i_fdir++)
-	{
-		dst_ip += i_fdir;
-		res = generate_ipv4_flow(port_id_test, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
-		if(res)
-		{
-			rte_exit(EXIT_FAILURE, "error in creating flow");
-		}
-		else
-			printf("flow rule %d created!\n",lcore_conf[num].flow_list->id);
-	}
-
-
 	ret = 0;
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(l3fwd_lkp.main_loop, NULL, SKIP_MASTER);
 
-	rte_delay_ms(CHECK_INTERVAL);
+	rte_delay_ms(CHECK_INTERVAL*100);
 
-	rte_delay_ms(10000);
+	#if BURST_DETECTION
+
+	init_fdir();
+
+	while(!force_quit)
+	{
+		check_all_queue_burst_status();
+		scheduling();
+	}
+
+	#endif
+
 
  	num = 6;
 	selected_queue = 2;
@@ -1100,7 +1094,6 @@ main(int argc, char **argv)
 	lcore_conf[num].dst_ip = dst_ip;
 
 	uint16_t wqe_pi, wqe_ci;
-
 
 	wqe_ci = mlx5_test[2].ghy_wqe_ci; //获取下发rule之前的队列头指针
 

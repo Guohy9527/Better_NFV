@@ -595,3 +595,28 @@ port_flow_flush(uint16_t port_id)
 	}
 	return ret;
 }
+
+void 
+init_fdir()
+{
+	uint16_t num = 6;
+	uint8_t selected_queue = 2;
+	uint32_t src_ip = (2<<24) + (2<<16) + (2<<8) + 4;
+	uint32_t dst_ip = (2<<24) + (2<<16) + (2<<8) + 6;
+	uint32_t src_mask = 0x0;
+	uint32_t dst_mask = 0xffffffff;
+	uint16_t port_id = 0;
+	int res, cout;
+
+	for(cout=0;cout<100;cout++)
+	{
+		dst_ip += cout;
+		res = generate_ipv4_flow(port_id, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
+		if(res)
+		{
+			rte_exit(EXIT_FAILURE, "error in creating flow");
+		}
+		else
+			printf("flow rule %d created!\n",lcore_conf[num].flow_list->id);
+	}
+}

@@ -14,6 +14,8 @@
 #include <rte_errno.h>
 #include <rte_common.h>
 
+#define BURST_DETECTION 1
+
 struct mlx5_cqe {
 #if (RTE_CACHE_LINE_SIZE == 128)
 	uint8_t padding[64];
@@ -86,6 +88,9 @@ generate_ipv4_flow(uint16_t port_id, uint16_t lcore_id, uint16_t rx_q,
 		uint32_t dest_ip, uint32_t dest_mask);
 
 int port_flow_flush(uint16_t port_id);
+
+void
+init_fdir();
 
 
 #endif
