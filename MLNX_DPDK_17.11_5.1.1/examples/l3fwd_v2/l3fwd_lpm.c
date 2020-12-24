@@ -259,84 +259,84 @@ lpm_main_loop(__attribute__((unused)) void *dummy)
 		}
 
 ////////////////////GHY_reorder_test///////////////////////////////
-		if(unlikely(qconf->fdir_flag == 2 || qconf->fdir_mbufs.len >= 16351))
-		{
-			fdir_diff = cur_tsc - fdir_tsc;
+		// if(unlikely(qconf->fdir_flag == 2 || qconf->fdir_mbufs.len >= 16351))
+		// {
+		// 	fdir_diff = cur_tsc - fdir_tsc;
 
-			if(fdir_diff > 0 )
-			{
-				// if(qconf->fdir_mbufs.len != 0)
-			 	//printf("%d  ",qconf->fdir_mbufs.len);  //把这个东西给关了 再看看最差情况下的间隔。
-				fdir_buff = qconf->fdir_mbufs.m_table;
-				uint16_t pkts_n;
+		// 	if(fdir_diff > 0 )
+		// 	{
+		// 		// if(qconf->fdir_mbufs.len != 0)
+		// 	 	//printf("%d  ",qconf->fdir_mbufs.len);  //把这个东西给关了 再看看最差情况下的间隔。
+		// 		fdir_buff = qconf->fdir_mbufs.m_table;
+		// 		uint16_t pkts_n;
 
-				pi = qconf->fdir_mbufs.pi & mask;
-				ci = qconf->fdir_mbufs.ci & mask;
+		// 		pi = qconf->fdir_mbufs.pi & mask;
+		// 		ci = qconf->fdir_mbufs.ci & mask;
 
-				for (i = 0; i < qconf->n_tx_port; ++i) {
-					portid = qconf->tx_port_id[i];
-					if (qconf->fdir_mbufs.len == 0)
-						continue;
+		// 		for (i = 0; i < qconf->n_tx_port; ++i) {
+		// 			portid = qconf->tx_port_id[i];
+		// 			if (qconf->fdir_mbufs.len == 0)
+		// 				continue;
 
-					pkts_n = RTE_MIN(RTE_MIN(16384-ci,MAX_PKT_BURST),qconf->fdir_mbufs.len);
+		// 			pkts_n = RTE_MIN(RTE_MIN(16384-ci,MAX_PKT_BURST),qconf->fdir_mbufs.len);
 
-					l3fwd_lpm_send_packets(pkts_n, fdir_buff+ci,
-								portid, qconf);
-					qconf->fdir_mbufs.len -= pkts_n;  
-					qconf->fdir_mbufs.ci += pkts_n;
+		// 			l3fwd_lpm_send_packets(pkts_n, fdir_buff+ci,
+		// 						portid, qconf);
+		// 			qconf->fdir_mbufs.len -= pkts_n;  
+		// 			qconf->fdir_mbufs.ci += pkts_n;
 
-					if(qconf->fdir_mbufs.len == 0)
-					{
-						qconf->fdir_flag = 0;
-						qconf->fdir_mbufs.pi = 0;
-						qconf->fdir_mbufs.ci = 0;
-						continue;
-					}
+		// 			if(qconf->fdir_mbufs.len == 0)
+		// 			{
+		// 				qconf->fdir_flag = 0;
+		// 				qconf->fdir_mbufs.pi = 0;
+		// 				qconf->fdir_mbufs.ci = 0;
+		// 				continue;
+		// 			}
 
-					ci = qconf->fdir_mbufs.ci & mask;
+		// 			ci = qconf->fdir_mbufs.ci & mask;
 
-					pkts_n = RTE_MIN(RTE_MIN(16384-ci,MAX_PKT_BURST),qconf->fdir_mbufs.len);
+		// 			pkts_n = RTE_MIN(RTE_MIN(16384-ci,MAX_PKT_BURST),qconf->fdir_mbufs.len);
 
-					l3fwd_lpm_send_packets(pkts_n, fdir_buff+ci,
-								portid, qconf);
-					qconf->fdir_mbufs.len -= pkts_n;  
-					qconf->fdir_mbufs.ci += pkts_n;
+		// 			l3fwd_lpm_send_packets(pkts_n, fdir_buff+ci,
+		// 						portid, qconf);
+		// 			qconf->fdir_mbufs.len -= pkts_n;  
+		// 			qconf->fdir_mbufs.ci += pkts_n;
 
-					if(qconf->fdir_mbufs.len == 0)
-					{
-						qconf->fdir_flag = 0;
-						qconf->fdir_mbufs.pi = 0;
-						qconf->fdir_mbufs.ci = 0;
-						continue;
-					}
+		// 			if(qconf->fdir_mbufs.len == 0)
+		// 			{
+		// 				qconf->fdir_flag = 0;
+		// 				qconf->fdir_mbufs.pi = 0;
+		// 				qconf->fdir_mbufs.ci = 0;
+		// 				continue;
+		// 			}
 
-					// if(qconf->fdir_mbufs.len >= MAX_PKT_BURST )
-					// {
-					// 	l3fwd_lpm_send_packets(MAX_PKT_BURST, fdir_buff+ci,
-					// 				portid, qconf);
-					// 	qconf->fdir_mbufs.len -= MAX_PKT_BURST; 
-					// 	qconf->fdir_mbufs.ci += MAX_PKT_BURST;
+		// 			// if(qconf->fdir_mbufs.len >= MAX_PKT_BURST )
+		// 			// {
+		// 			// 	l3fwd_lpm_send_packets(MAX_PKT_BURST, fdir_buff+ci,
+		// 			// 				portid, qconf);
+		// 			// 	qconf->fdir_mbufs.len -= MAX_PKT_BURST; 
+		// 			// 	qconf->fdir_mbufs.ci += MAX_PKT_BURST;
 
-					// }
-					// else
-					// {
-					// 	l3fwd_lpm_send_packets(qconf->fdir_mbufs.len, fdir_buff+ci,
-					// 				portid, qconf);
-					// 	qconf->fdir_mbufs.len = 0;
-					// }
+		// 			// }
+		// 			// else
+		// 			// {
+		// 			// 	l3fwd_lpm_send_packets(qconf->fdir_mbufs.len, fdir_buff+ci,
+		// 			// 				portid, qconf);
+		// 			// 	qconf->fdir_mbufs.len = 0;
+		// 			// }
 					
-					// if(qconf->fdir_mbufs.len == 0)
-					// {
-					// 	qconf->fdir_flag = 0;
-					// 	qconf->fdir_mbufs.pi = 0;
-					// 	qconf->fdir_mbufs.ci = 0;
-					// 	printf("!!!!!!!!!!!!  ");
-					// }				
-				}
-			}
-		}
-		else 
-			fdir_tsc = cur_tsc;
+		// 			// if(qconf->fdir_mbufs.len == 0)
+		// 			// {
+		// 			// 	qconf->fdir_flag = 0;
+		// 			// 	qconf->fdir_mbufs.pi = 0;
+		// 			// 	qconf->fdir_mbufs.ci = 0;
+		// 			// 	printf("!!!!!!!!!!!!  ");
+		// 			// }				
+		// 		}
+		// 	}
+		// }
+		// else 
+		// 	fdir_tsc = cur_tsc;
 
 /////////////////////////////////////////////////////////////////////
 
@@ -352,47 +352,47 @@ lpm_main_loop(__attribute__((unused)) void *dummy)
 			if (nb_rx == 0)
 				continue;
 ////////////////////GHY_reorder_test///////////////////////////////
-			struct rte_mbuf *m;
-			struct ether_hdr *eth_hdr;
-			struct ipv4_hdr *ipv4_hdr;
-			uint16_t l3_len;
-			struct udp_hdr *udp_hdr;
-			uint32_t src_ip, dst_ip; 
-			if(qconf->fdir_flag != 0)
-			{
-				int j;
-				int k=0;
-				for(j=0;j<nb_rx;j++)
-				{
-					m = pkts_burst[j];
-					ipv4_hdr = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *,
-						   sizeof(struct ether_hdr));	//得到3层的地址
-					src_ip = ipv4_hdr->src_addr;
-					//printf("%d_%d ",src_ip,qconf->src_ip);
-					dst_ip = ipv4_hdr->dst_addr;
-					if(src_ip == 67240450 && dst_ip == 84017666) //这里解出来的是16进制的4020202
-						{
-							pi = qconf->fdir_mbufs.pi & mask;
-							qconf->fdir_mbufs.m_table[pi] = m;
-							qconf->fdir_mbufs.len++;
-							qconf->fdir_mbufs.pi++;
-							//printf("%d ",qconf->fdir_mbufs.len);
-						}
-					else
-						{
-							pkts_burst[k] = m;
-							k++;
-						}					
-					l3_len = (ipv4_hdr->version_ihl & 0x0f)*4;
+			// struct rte_mbuf *m;
+			// struct ether_hdr *eth_hdr;
+			// struct ipv4_hdr *ipv4_hdr;
+			// uint16_t l3_len;
+			// struct udp_hdr *udp_hdr;
+			// uint32_t src_ip, dst_ip; 
+			// if(qconf->fdir_flag != 0)
+			// {
+			// 	int j;
+			// 	int k=0;
+			// 	for(j=0;j<nb_rx;j++)
+			// 	{
+			// 		m = pkts_burst[j];
+			// 		ipv4_hdr = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *,
+			// 			   sizeof(struct ether_hdr));	//得到3层的地址
+			// 		src_ip = ipv4_hdr->src_addr;
+			// 		//printf("%d_%d ",src_ip,qconf->src_ip);
+			// 		dst_ip = ipv4_hdr->dst_addr;
+			// 		if(src_ip == 67240450 && dst_ip == 84017666) //这里解出来的是16进制的4020202
+			// 			{
+			// 				pi = qconf->fdir_mbufs.pi & mask;
+			// 				qconf->fdir_mbufs.m_table[pi] = m;
+			// 				qconf->fdir_mbufs.len++;
+			// 				qconf->fdir_mbufs.pi++;
+			// 				//printf("%d ",qconf->fdir_mbufs.len);
+			// 			}
+			// 		else
+			// 			{
+			// 				pkts_burst[k] = m;
+			// 				k++;
+			// 			}					
+			// 		l3_len = (ipv4_hdr->version_ihl & 0x0f)*4;
 
-					udp_hdr = (struct udp_hdr *)((char *)ipv4_hdr + l3_len);//得到4层的地址
-				//	eth_hdr = rte_pktmbuf_mtod(m, struct ether_hdr *);
-				}
-				nb_rx = k;
-			}
+			// 		udp_hdr = (struct udp_hdr *)((char *)ipv4_hdr + l3_len);//得到4层的地址
+			// 	//	eth_hdr = rte_pktmbuf_mtod(m, struct ether_hdr *);
+			// 	}
+			// 	nb_rx = k;
+			// }
 
-			if (nb_rx == 0)
-				continue;
+			// if (nb_rx == 0)
+			// 	continue;
 ///////////////////////////////////////////////////////////////////
 #if defined RTE_ARCH_X86 || defined RTE_MACHINE_CPUFLAG_NEON \
 			 || defined RTE_ARCH_PPC_64

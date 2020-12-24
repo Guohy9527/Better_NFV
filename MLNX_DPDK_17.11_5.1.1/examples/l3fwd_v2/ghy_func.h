@@ -49,7 +49,7 @@ struct ghy_mlx5_data
 	uint16_t ghy_q_n;
 	uint16_t ghy_wqe_pi;
 	uint16_t ghy_wqe_ci;
-	
+	uint16_t counter;
 };
 
 
@@ -91,6 +91,9 @@ int port_flow_flush(uint16_t port_id);
 
 void
 init_fdir();
+
+// uint16_t 
+// queue_burst_status(struct ghy_mlx5_data * ghy_rxq_data);
 
 
 #endif

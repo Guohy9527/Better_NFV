@@ -159,7 +159,7 @@ static struct rte_eth_conf port_conf = {
 	.rx_adv_conf = {
 		.rss_conf = {
 			.rss_key = NULL,
-			.rss_hf =ETH_RSS_TCP, //ETH_RSS_IP | ETH_RSS_UDP |
+			.rss_hf =ETH_RSS_UDP, //ETH_RSS_IP | ETH_RSS_TCP |
 		},
 	},
 	.txmode = {
@@ -1053,15 +1053,6 @@ main(int argc, char **argv)
 	check_all_ports_link_status(nb_ports, enabled_port_mask);
 	printf("%d\n",nb_rx_queue);
 
-	uint16_t num = 6;
-	uint8_t selected_queue = 2;
-	uint32_t src_ip = (2<<24) + (2<<16) + (2<<8) + 4;
-	uint32_t dst_ip = (2<<24) + (2<<16) + (2<<8) + 6;
-	uint32_t src_mask = 0x0;
-	uint32_t dst_mask = 0xffffffff;
-	uint16_t port_id_test = 0;
-	int res, i_fdir;
-
 	ret = 0;
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(l3fwd_lkp.main_loop, NULL, SKIP_MASTER);
@@ -1070,51 +1061,57 @@ main(int argc, char **argv)
 
 	#if BURST_DETECTION
 
-	init_fdir();
+//	init_fdir();
 
-	while(!force_quit)
-	{
-		check_all_queue_burst_status();
-		scheduling();
+	while(!force_quit){
+		rte_delay_ms(CHECK_INTERVAL*10);
+		int n;
+		for(n=0; n<nb_rx_queue; n++){
+			printf("queue:%d  %d    ",2*n+2,mlx5_test[2*n+2].counter);
+		}
+		printf("\n");
 	}
+
+	// while(!force_quit)
+	// {
+	// 	check_all_queue_burst_status();
+	// 	scheduling();
+	// }
+
+ 	// num = 6;
+	// selected_queue = 2;
+	// src_ip = (2<<24) + (2<<16) + (2<<8) + 4;
+	// dst_ip = (2<<24) + (2<<16) + (2<<8) + 5;
+	// src_mask = 0x0;
+	// dst_mask = 0xffffffff;
+	// port_id_test = 0;
+
+	// lcore_conf[num].fdir_flag = 1;
+	// lcore_conf[num].src_ip = src_ip;
+	// lcore_conf[num].dst_ip = dst_ip;
+
+	// uint16_t wqe_pi, wqe_ci;
+
+	// wqe_ci = mlx5_test[2].ghy_wqe_ci; //获取下发rule之前的队列头指针
+
+	// res = generate_ipv4_flow(port_id_test, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
+	// if(res){
+	// 	rte_exit(EXIT_FAILURE, "error in creating flow");
+	// }
+
+	// wqe_pi = mlx5_test[2].ghy_wqe_pi; //获取下发rule之后的队列尾指针
+
+	// if(wqe_pi > wqe_ci + 1024)
+	// 	lcore_conf[num].fdir_flag = 2;
+		
+	// printf("%d——%d\n",wqe_pi,wqe_ci);
+	// printf("%d——%d\n",mlx5_test[2].ghy_wqe_pi,mlx5_test[2].ghy_wqe_ci);
+
+	// printf("\nflow rule created,quque:%d!\n",selected_queue);
+
+	// printf("%d——%d\n",mlx5_test[2].ghy_wqe_pi,mlx5_test[2].ghy_wqe_ci);
 
 	#endif
-
-
- 	num = 6;
-	selected_queue = 2;
-	src_ip = (2<<24) + (2<<16) + (2<<8) + 4;
-	dst_ip = (2<<24) + (2<<16) + (2<<8) + 5;
-	src_mask = 0x0;
-	dst_mask = 0xffffffff;
-	port_id_test = 0;
-
-	lcore_conf[num].fdir_flag = 1;
-	lcore_conf[num].src_ip = src_ip;
-	lcore_conf[num].dst_ip = dst_ip;
-
-	uint16_t wqe_pi, wqe_ci;
-
-	wqe_ci = mlx5_test[2].ghy_wqe_ci; //获取下发rule之前的队列头指针
-
-	res = generate_ipv4_flow(port_id_test, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
-	if(res){
-		rte_exit(EXIT_FAILURE, "error in creating flow");
-	}
-
-	wqe_pi = mlx5_test[2].ghy_wqe_pi; //获取下发rule之后的队列尾指针
-
-	if(wqe_pi > wqe_ci + 1024)
-		lcore_conf[num].fdir_flag = 2;
-		
-	printf("%d——%d\n",wqe_pi,wqe_ci);
-	printf("%d——%d\n",mlx5_test[2].ghy_wqe_pi,mlx5_test[2].ghy_wqe_ci);
-
-	printf("\nflow rule created,quque:%d!\n",selected_queue);
-
-	printf("%d——%d\n",mlx5_test[2].ghy_wqe_pi,mlx5_test[2].ghy_wqe_ci);
-
-
 
 	// while(!force_quit)
 	// {
@@ -1190,7 +1187,6 @@ main(int argc, char **argv)
 		       "  RX-bytes: %-10"PRIu64"\n",
 		       i_test, stats_test.q_ipackets[i_test], stats_test.q_errors[i_test], stats_test.q_ibytes[i_test]);
 	}
-
 	// int i_test;
 	// for (i_test = 0; i_test < RTE_ETHDEV_QUEUE_STAT_CNTRS; i_test++) {
 	// 	printf("  Stats reg %2d RX-packets: %-10"PRIu64

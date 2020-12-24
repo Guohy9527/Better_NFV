@@ -57,6 +57,32 @@
 #endif
 
 /**
+ * 函数的作用：检测队列已收包个数
+ * 
+ * 返回值：队列当前空置包个数
+ */
+uint16_t queue_burst_status(struct ghy_mlx5_data * ghy_rxq_data){
+	uint8_t op_code, op_owner, op_own;
+	uint16_t counter;
+	uint16_t n;
+
+	if(ghy_rxq_data == NULL)
+		return 0;
+
+	for(n=0; n<ghy_rxq_data->ghy_q_n; n++){
+		unsigned int pos = (ghy_rxq_data->ghy_rq_ci - n) & (ghy_rxq_data->ghy_q_n -1);
+		unsigned int ownership = !!((ghy_rxq_data->ghy_rq_ci - n) & ghy_rxq_data->ghy_q_n);	op_own = (ghy_rxq_data ->ghy_cq + pos) ->op_own;
+		op_owner = op_own & 0x1;
+		op_code = op_own >> 4;
+		if ((op_owner != ownership) || (op_code == 0xf))
+			continue; /* No CQE. */
+		else 
+			break;
+	}
+	return n;
+}
+
+/**
  * Fill in buffer descriptors in a multi-packet send descriptor.
  *
  * @param txq
@@ -655,7 +681,7 @@ rxq_cq_to_ptype_oflags_v(struct mlx5_rxq_data *rxq, __m128i cqes[4],
 
 #if BURST_DETECTION
 
-extern struct ghy_mlx5_data mlx5_test[RTE_MAX_LCORE];
+extern struct ghy_mlx5_data mlx5_test[12];
 
 //	struct ghy_rxq_data * qdetection = mlx5_test;
 #endif
@@ -752,6 +778,7 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 	ghy_lcore -> ghy_cq = &(*rxq->cqes)[0];
 	ghy_lcore -> ghy_rq_ci = rxq->rq_ci;
 	ghy_lcore -> ghy_q_n = q_n;
+	ghy_lcore -> counter = queue_burst_status(ghy_lcore);
 	#endif
 
 	/*

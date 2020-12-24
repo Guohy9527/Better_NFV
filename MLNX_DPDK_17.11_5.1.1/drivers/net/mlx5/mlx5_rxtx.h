@@ -950,6 +950,7 @@ txq_count_contig_multi_seg(struct rte_mbuf **pkts, uint16_t pkts_n)
 		uint16_t ghy_q_n;
 		uint16_t ghy_wqe_pi;
 		uint16_t ghy_wqe_ci;
+		uint16_t counter;
 	};
 //	struct ghy_rxq_data * qdetection = mlx5_test;
 #endif

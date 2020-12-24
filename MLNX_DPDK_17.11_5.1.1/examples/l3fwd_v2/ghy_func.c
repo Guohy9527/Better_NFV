@@ -157,7 +157,7 @@ static const struct {
  */
 int ghy_burst_detection(struct ghy_mlx5_data * ghy_rxq_data){
 	unsigned int k = 128;
-	uint8_t op_code, op_owner,op_own;
+	uint8_t op_code, op_owner, op_own;
 
 	if(ghy_rxq_data == NULL)
 		return 0;
@@ -171,6 +171,32 @@ int ghy_burst_detection(struct ghy_mlx5_data * ghy_rxq_data){
 		return 0; /* No CQE. */
 	return 1;
 }
+
+/**
+ * 函数的作用：检测队列已收包个数
+ * 
+ * 返回值：队列当前空置包个数
+ */
+// uint16_t queue_burst_status(struct ghy_mlx5_data * ghy_rxq_data){
+// 	uint8_t op_code, op_owner, op_own;
+// 	uint16_t counter;
+// 	uint16_t n;
+
+// 	if(ghy_rxq_data == NULL)
+// 		return 0;
+
+// 	for(n=0; n<ghy_rxq_data->ghy_q_n; n++){
+// 		unsigned int pos = (ghy_rxq_data->ghy_rq_ci - n) & (ghy_rxq_data->ghy_q_n -1);
+// 		unsigned int ownership = !!((ghy_rxq_data->ghy_rq_ci - n) & ghy_rxq_data->ghy_q_n);	op_own = (ghy_rxq_data ->ghy_cq + pos) ->op_own;
+// 		op_owner = op_own & 0x1;
+// 		op_code = op_own >> 4;
+// 		if ((op_owner != ownership) || (op_code == 0xf))
+// 			continue; /* No CQE. */
+// 		else 
+// 			break;
+// 	}
+// 	return n;
+// }
 
 
 
