@@ -1,9 +1,6 @@
-//#include "ghy_func.h"
-#include "l3fwd.h"
+#include "libnfv_lb.h"
 
-/* Generic flow management functions. */
 
-/** Generate flow_item[] entry. */
 #define MK_FLOW_ITEM(t, s) \
 	[RTE_FLOW_ITEM_TYPE_ ## t] = { \
 		.name = # t, \
@@ -134,120 +131,6 @@ static const struct {
 
 };
 
-
-// static __rte_always_inline int
-// queue_is_congested(volatile struct mlx5_cqe *cqe,
-// 	  unsigned int cqes_n, const uint16_t pi)
-// {
-// 	uint16_t idx = pi & cqes_n;
-// 	uint8_t op_own = cqe->op_own;
-// 	uint8_t op_owner = MLX5_CQE_OWNER(op_own);
-// 	uint8_t op_code = MLX5_CQE_OPCODE(op_own);
-
-// 	if (unlikely((op_owner != (!!(idx))) || (op_code == MLX5_CQE_INVALID)))
-// 		return 1; /* No CQE. */
-// 	return 0;
-// }
-
-
-/**
- * 函数的作用：通过判断rq_ci左边第K个位置的CQE来判断当前网卡硬件队列是否发生拥塞
- * 
- *
- */
-int ghy_burst_detection(struct ghy_mlx5_data * ghy_rxq_data){
-	unsigned int k = 128;
-	uint8_t op_code, op_owner, op_own;
-
-	if(ghy_rxq_data == NULL)
-		return 0;
-
-	unsigned int pos = (ghy_rxq_data->ghy_rq_ci - k) & (ghy_rxq_data->ghy_q_n -1);
-	unsigned int ownership = !!((ghy_rxq_data->ghy_rq_ci - k) & ghy_rxq_data->ghy_q_n);
-	op_own = (ghy_rxq_data ->ghy_cq + pos) ->op_own;
-	op_owner = op_own & 0x1;
-	op_code = op_own >> 4;
-	if ((op_owner != ownership) || (op_code == 0xf))
-		return 0; /* No CQE. */
-	return 1;
-}
-
-/**
- * 函数的作用：检测队列已收包个数
- * 
- * 返回值：队列当前空置包个数
- */
-// uint16_t queue_burst_status(struct ghy_mlx5_data * ghy_rxq_data){
-// 	uint8_t op_code, op_owner, op_own;
-// 	uint16_t counter;
-// 	uint16_t n;
-
-// 	if(ghy_rxq_data == NULL)
-// 		return 0;
-
-// 	for(n=0; n<ghy_rxq_data->ghy_q_n; n++){
-// 		unsigned int pos = (ghy_rxq_data->ghy_rq_ci - n) & (ghy_rxq_data->ghy_q_n -1);
-// 		unsigned int ownership = !!((ghy_rxq_data->ghy_rq_ci - n) & ghy_rxq_data->ghy_q_n);	op_own = (ghy_rxq_data ->ghy_cq + pos) ->op_own;
-// 		op_owner = op_own & 0x1;
-// 		op_code = op_own >> 4;
-// 		if ((op_owner != ownership) || (op_code == 0xf))
-// 			continue; /* No CQE. */
-// 		else 
-// 			break;
-// 	}
-// 	return n;
-// }
-
-
-
-// int ghy_burst_detection(struct ghy_mlx5_data * ghy_rxq_data){
-// 	unsigned int k = 128;
-// 	unsigned int rq_idx = 0;
-// 	uint8_t opcode, owner,rxq_op_own;
-// 	unsigned int ownership = ghy_rxq_data -> ghy_ownership;
-
-// 	if(ghy_rxq_data == NULL)
-// 		return 0;
-
-// 	if(ghy_rxq_data->ghy_rq_ci <= k){
-// 		rq_idx = ghy_rxq_data->ghy_rq_ci + 511-k;
-// 		rxq_op_own = (ghy_rxq_data ->ghy_cq + rq_idx) ->op_own;
-// 		owner = rxq_op_own & 0x1;
-// 		opcode = rxq_op_own >> 4;
-
-// 		if(owner == ownership && opcode != 0xf)
-// 			return 1;
-// 		else 
-// 			return 0;
-// 	}
-// 	else if(ghy_rxq_data -> ghy_rq_ci <= ghy_rxq_data -> ghy_cq_ci){
-// 		rq_idx = ghy_rxq_data ->ghy_rq_ci -k;
-// 		rxq_op_own = (ghy_rxq_data ->ghy_cq + rq_idx) ->op_own;
-// 		owner = rxq_op_own & 0x1;
-// 		opcode = rxq_op_own >> 4;
-
-// 		if( !(owner == ownership) && opcode != 0xf)
-// 			return 1;
-// 		else 
-// 			return 0;
-// 	}
-// 	else {
-// 		rq_idx = ghy_rxq_data->ghy_rq_ci - k;
-// 		rxq_op_own = (ghy_rxq_data ->ghy_cq + rq_idx) ->op_own;
-// 		owner = rxq_op_own & 0x1;
-// 		opcode = rxq_op_own >> 4;
-
-// 		if(owner == ownership && opcode != 0xf)
-// 			return 1;
-// 		else 
-// 			return 0;
-// 	}	
-
-// }
-
-
-
-
 /** Print a message out of a flow error. */
 int
 lcore_flow_complain(struct rte_flow_error *error)
@@ -283,6 +166,7 @@ lcore_flow_complain(struct rte_flow_error *error)
 	return -err;
 }
 
+/** Compute storage space needed by item specification. */
 void
 flow_item_spec_size(const struct rte_flow_item *item,
 		    size_t *size, size_t *pad)
@@ -594,6 +478,11 @@ generate_ipv4_flow(uint16_t port_id, uint16_t lcore_id, uint16_t rx_q,
 	return res;
 }
 
+/**
+ * 函数的作用：清楚port上下发的所有fdir规则
+ * 
+ *
+ */
 int
 port_flow_flush(uint16_t port_id)
 {
@@ -622,8 +511,15 @@ port_flow_flush(uint16_t port_id)
 	return ret;
 }
 
+
+/**
+ * 函数的作用：测试下发函数，在初始化的时候下发100条规则测试是否正常；
+ * fdir最开始的几条规则下发时间远大于平均时间，为消除影响，在初始化的时候先下发一部分规则以减少影响
+ * 
+ *
+ */
 void 
-nfv_init_fdir()
+nfv_lb_init_fdir()
 {
 	uint16_t num = 6;
 	uint8_t selected_queue = 2;
@@ -645,4 +541,26 @@ nfv_init_fdir()
 		else
 			printf("flow rule %d created!\n",lcore_conf[num].flow_list->id);
 	}
+}
+
+/**
+ * 函数的作用：通过判断rq_ci左边第K个位置的CQE来判断当前网卡硬件队列是否发生拥塞
+ * 
+ *
+ */
+int nfv_lb_burst_detection(struct date_from_driver * nic_rxq_data){
+    unsigned int k = 128;
+	uint8_t op_code, op_owner, op_own;
+
+    if(nic_rxq_data == NULL)
+        return 0;
+
+	unsigned int pos = (nic_rxq_data->nic_rq_ci - k) & (nic_rxq_data->nic_q_n -1);
+	unsigned int ownership = !!((nic_rxq_data->nic_rq_ci - k) & nic_rxq_data->nic_q_n);
+	op_own = (nic_rxq_data ->nic_cq + pos) ->op_own;
+	op_owner = op_own & 0x1;
+	op_code = op_own >> 4;
+	if ((op_owner != ownership) || (op_code == 0xf))
+		return 0; /* No CQE. */
+	return 1;               
 }

@@ -940,17 +940,19 @@ txq_count_contig_multi_seg(struct rte_mbuf **pkts, uint16_t pkts_n)
 	return pos;
 }
 
+//libnfv_lb
+
 #define BURST_DETECTION	 1
 
 #if BURST_DETECTION
-	struct ghy_mlx5_data
+	struct data_from_driver
 	{
-		unsigned int ghy_rq_ci;
-		volatile struct mlx5_cqe * ghy_cq;
-		uint16_t ghy_q_n;
-		uint16_t ghy_wqe_pi;
-		uint16_t ghy_wqe_ci;
-		uint16_t counter;
+		unsigned int nic_rq_ci;
+		volatile struct mlx5_cqe * nic_cq;
+		uint16_t nic_q_n;
+		uint16_t nic_wqe_pi;
+		uint16_t nic_wqe_ci;
+		uint16_t nic_counter;
 	};
 //	struct ghy_rxq_data * qdetection = mlx5_test;
 #endif

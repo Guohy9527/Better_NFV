@@ -1342,6 +1342,15 @@ rte_eth_convert_txq_flags(const uint32_t txq_flags, uint64_t *tx_offloads)
 		offloads |= DEV_TX_OFFLOAD_MBUF_FAST_FREE;
 
 	*tx_offloads = offloads;
+
+	if(!(txq_flags & ETH_TXQ_FLAGS_NOMULTSEGS))
+		offloads |= DEV_TX_OFFLOAD_MULTI_SEGS;
+	if(!(txq_flags & ETH_TXQ_FLAGS_NOVLANOFFL))
+		offloads |= DEV_TX_OFFLOAD_VLAN_INSERT;
+	if(!(txq_flags & ETH_TXQ_FLAGS_NOXSUMSCTP))
+		offloads |= DEV_TX_OFFLOAD_SCTP_CKSUM;
+	if(!)
+
 }
 
 /**

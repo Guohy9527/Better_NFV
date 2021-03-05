@@ -90,7 +90,7 @@ generate_ipv4_flow(uint16_t port_id, uint16_t lcore_id, uint16_t rx_q,
 int port_flow_flush(uint16_t port_id);
 
 void
-init_fdir();
+nfv_init_fdir();
 
 // uint16_t 
 // queue_burst_status(struct ghy_mlx5_data * ghy_rxq_data);

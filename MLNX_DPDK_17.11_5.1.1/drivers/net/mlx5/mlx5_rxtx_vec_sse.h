@@ -57,32 +57,6 @@
 #endif
 
 /**
- * 函数的作用：检测队列已收包个数
- * 
- * 返回值：队列当前空置包个数
- */
-uint16_t queue_burst_status(struct ghy_mlx5_data * ghy_rxq_data){
-	uint8_t op_code, op_owner, op_own;
-	uint16_t counter;
-	uint16_t n;
-
-	if(ghy_rxq_data == NULL)
-		return 0;
-
-	for(n=0; n<ghy_rxq_data->ghy_q_n; n++){
-		unsigned int pos = (ghy_rxq_data->ghy_rq_ci - n) & (ghy_rxq_data->ghy_q_n -1);
-		unsigned int ownership = !!((ghy_rxq_data->ghy_rq_ci - n) & ghy_rxq_data->ghy_q_n);	op_own = (ghy_rxq_data ->ghy_cq + pos) ->op_own;
-		op_owner = op_own & 0x1;
-		op_code = op_own >> 4;
-		if ((op_owner != ownership) || (op_code == 0xf))
-			continue; /* No CQE. */
-		else 
-			break;
-	}
-	return n;
-}
-
-/**
  * Fill in buffer descriptors in a multi-packet send descriptor.
  *
  * @param txq
@@ -681,9 +655,30 @@ rxq_cq_to_ptype_oflags_v(struct mlx5_rxq_data *rxq, __m128i cqes[4],
 
 #if BURST_DETECTION
 
-extern struct ghy_mlx5_data mlx5_test[12];
+extern struct data_from_driver mlx5_test[12];
 
-//	struct ghy_rxq_data * qdetection = mlx5_test;
+/**
+ * 函数的作用：检测队列已收包个数
+ * 
+ * 返回值：队列当前空置包个数
+ */
+int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data){
+    unsigned int k = 128;
+	uint8_t op_code, op_owner, op_own;
+
+    if(nic_rxq_data == NULL)
+        return 0;
+
+	unsigned int pos = (nic_rxq_data->nic_rq_ci - k) & (nic_rxq_data->nic_q_n -1);
+	unsigned int ownership = !!((nic_rxq_data->nic_rq_ci - k) & nic_rxq_data->nic_q_n);
+	op_own = (nic_rxq_data ->nic_cq + pos) ->op_own;
+	op_owner = op_own & 0x1;
+	op_code = op_own >> 4;
+	if ((op_owner != ownership) || (op_code == 0xf))
+		return 0; /* No CQE. */
+	return 1;               
+}
+
 #endif
 
 /**
@@ -771,14 +766,14 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 	pkts_n = RTE_MIN(pkts_n, MLX5_VPMD_RX_MAX_BURST);
 	
 	#if BURST_DETECTION
-	struct ghy_mlx5_data * ghy_lcore;
+	struct data_from_driver * queue_status;
 	uint32_t lcore_id;
 	lcore_id = rte_lcore_id();
-	ghy_lcore = &mlx5_test[lcore_id];
-	ghy_lcore -> ghy_cq = &(*rxq->cqes)[0];
-	ghy_lcore -> ghy_rq_ci = rxq->rq_ci;
-	ghy_lcore -> ghy_q_n = q_n;
-	ghy_lcore -> counter = queue_burst_status(ghy_lcore);
+	queue_status = &mlx5_test[lcore_id];
+	queue_status -> nic_cq = &(*rxq->cqes)[0];
+	queue_status -> nic_rq_ci = rxq->rq_ci;
+	queue_status -> nic_q_n = q_n;
+	queue_status -> nic_counter = nfv_lb_burst_detection(queue_status);
 	#endif
 
 	/*

@@ -70,18 +70,18 @@
 #include <rte_udp.h>
 #include <rte_string_fns.h>
 #include <rte_cpuflags.h>
-#include <rte_malloc.h>
+
 #include <cmdline_parse.h>
 #include <cmdline_parse_etheraddr.h>
 
 #include "l3fwd.h"
-//#include "ghy_func.h"
+#include "libnfv_lb.h"
 
 /*
  * Configurable number of RX/TX ring descriptors
  */
-#define RTE_TEST_RX_DESC_DEFAULT 4096
-#define RTE_TEST_TX_DESC_DEFAULT 4096
+#define RTE_TEST_RX_DESC_DEFAULT 128
+#define RTE_TEST_TX_DESC_DEFAULT 512
 
 #define MAX_TX_QUEUE_PER_PORT RTE_MAX_ETHPORTS
 #define MAX_RX_QUEUE_PER_PORT 128
@@ -159,7 +159,7 @@ static struct rte_eth_conf port_conf = {
 	.rx_adv_conf = {
 		.rss_conf = {
 			.rss_key = NULL,
-			.rss_hf =ETH_RSS_UDP, //ETH_RSS_IP | ETH_RSS_TCP |
+			.rss_hf = ETH_RSS_IP,
 		},
 	},
 	.txmode = {
@@ -299,7 +299,6 @@ init_lcore_rx_queues(void)
 			lcore_conf[lcore].rx_queue_list[nb_rx_queue].queue_id =
 				lcore_params[i].queue_id;
 			lcore_conf[lcore].n_rx_queue++;
-			lcore_conf[lcore].flow_list =NULL;
 		}
 	}
 	return 0;
@@ -525,7 +524,7 @@ static const struct option lgopts[] = {
 	nb_ports*nb_lcores*MAX_PKT_BURST +	\
 	nb_ports*n_tx_queue*nb_txd +		\
 	nb_lcores*MEMPOOL_CACHE_SIZE),		\
-	(unsigned)819200)
+	(unsigned)8192)
 
 /* Parse the argument given in the command line of the application */
 static int
@@ -839,7 +838,9 @@ prepare_ptype_parser(uint16_t portid, uint16_t queueid)
 	return 0;
 }
 
-extern	struct ghy_mlx5_data  mlx5_test[12];
+//libnfv_lb
+
+extern struct data_from_driver mlx5_test[12];
 
 int
 main(int argc, char **argv)
@@ -1051,102 +1052,28 @@ main(int argc, char **argv)
 
 
 	check_all_ports_link_status(nb_ports, enabled_port_mask);
-	printf("%d\n",nb_rx_queue);
 
 	ret = 0;
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(l3fwd_lkp.main_loop, NULL, SKIP_MASTER);
 
-	rte_delay_ms(CHECK_INTERVAL*100);
+#if BURST_DECTION
 
-	#if BURST_DETECTION
+	rte_delay_ms(CHECK_INTERVAL*100)
 
-	nfv_init_fdir();
+	nfv_lb_init_fdir();
 
-	while(!force_quit){
+	while (!force_quit)
+	{
 		rte_delay_ms(CHECK_INTERVAL*10);
 		int n;
 		for(n=0; n<nb_rx_queue; n++){
-			printf("queue:%d  %d    ",2*n+2,mlx5_test[2*n+2].counter);
+			printf("queue:%d  %d    ",2*n+2,mlx5_test[2*n+2].nic_counter);
 		}
 		printf("\n");
 	}
 
- 	// num = 6;
-	// selected_queue = 2;
-	// src_ip = (2<<24) + (2<<16) + (2<<8) + 4;
-	// dst_ip = (2<<24) + (2<<16) + (2<<8) + 5;
-	// src_mask = 0x0;
-	// dst_mask = 0xffffffff;
-	// port_id_test = 0;
- 
-	// lcore_conf[num].fdir_flag = 1;
-	// lcore_conf[num].src_ip = src_ip;
-	// lcore_conf[num].dst_ip = dst_ip;
-
-	// uint16_t wqe_pi, wqe_ci;
-
-	// wqe_ci = mlx5_test[2].ghy_wqe_ci; //获取下发rule之前的队列头指针
-
-	// res = generate_ipv4_flow(port_id_test, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
-	// if(res){
-	// 	rte_exit(EXIT_FAILURE, "error in creating flow");
-	// }
-
-	// wqe_pi = mlx5_test[2].ghy_wqe_pi; //获取下发rule之后的队列尾指针
-
-	// if(wqe_pi > wqe_ci + 1024)
-	// 	lcore_conf[num].fdir_flag = 2;
-		
-	// printf("%d——%d\n",wqe_pi,wqe_ci);
-	// printf("%d——%d\n",mlx5_test[2].ghy_wqe_pi,mlx5_test[2].ghy_wqe_ci);
-
-	// printf("\nflow rule created,quque:%d!\n",selected_queue);
-
-	// printf("%d——%d\n",mlx5_test[2].ghy_wqe_pi,mlx5_test[2].ghy_wqe_ci);
-
-	#endif
-
-	// while(!force_quit)
-	// {
-
-	// 		printf("%d——%d  ",mlx5_test[6].ghy_wqe_pi,mlx5_test[6].ghy_wqe_ci);
-			
-	// }
-
-// 	while(!force_quit)
-// 	{
-// 		int burst_flag;
-// 		uint16_t num;
-// 		for(num=2;num<8;num=num+2)
-// 		{
-// 			burst_flag=ghy_burst_detection(&mlx5_test[num]);
-// //			printf("%d_%d  " ,burst_flag,num);
-// 			if(burst_flag != 0)
-// 			{
-// 				printf("\n%d  %d \n" ,burst_flag,num);
-// 				uint8_t selected_queue = 2;
-// 				uint32_t src_ip = (2<<24) + (2<<16) + (2<<8) + 4;
-// 				uint32_t dst_ip = (2<<24) + (2<<16) + (2<<8) + 5;
-// 				uint32_t src_mask = 0x0;
-// 				uint32_t dst_mask = 0xffffffff;
-
-// 				uint16_t port_id_test = 0;
-// 				int res;
-
-// 				res = generate_ipv4_flow(port_id_test, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
-// 				if(res){
-// 					rte_exit(EXIT_FAILURE, "error in creating flow");
-// 				}
-// 				else printf("\nflow rule created,quque:%d!\n",selected_queue);
-// 				lcore_conf[num].fdir_flag = burst_flag;
-// 				lcore_conf[num].src_ip = src_ip;
-// 				lcore_conf[num].dst_ip = dst_ip;
-// 				rte_delay_ms(10000);
-// 			}
-// 		}
-// //		printf("%d  ",mlx5_test[2].ghy_cq_ci);
-// 	}
+#endif
 
 
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
@@ -1155,8 +1082,6 @@ main(int argc, char **argv)
 			break;
 		}
 	}
-
-	
 
 	struct rte_eth_stats stats_test;
 	uint16_t portid_test = 0;
@@ -1171,7 +1096,7 @@ main(int argc, char **argv)
 	       stats_test.obytes);
 
 	printf("\n");
-	
+
 	int i_test;
 	// portid = 0;
 	// nb_rx_queue = get_port_n_rx_queues(portid);  //获取总队列数
@@ -1181,14 +1106,6 @@ main(int argc, char **argv)
 		       "  RX-bytes: %-10"PRIu64"\n",
 		       i_test, stats_test.q_ipackets[i_test], stats_test.q_errors[i_test], stats_test.q_ibytes[i_test]);
 	}
-	// int i_test;
-	// for (i_test = 0; i_test < RTE_ETHDEV_QUEUE_STAT_CNTRS; i_test++) {
-	// 	printf("  Stats reg %2d RX-packets: %-10"PRIu64
-	// 	       "  RX-errors: %-10"PRIu64
-	// 	       "  RX-bytes: %-10"PRIu64"\n",
-	// 	       i_test, stats_test.q_ipackets[i_test], stats_test.q_errors[i_test], stats_test.q_ibytes[i_test]);
-	// }
-
 
 	ret = port_flow_flush(portid_test);
 	if(!ret)
