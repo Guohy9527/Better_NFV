@@ -1059,7 +1059,7 @@ main(int argc, char **argv)
 
 #if BURST_DECTION
 
-	rte_delay_ms(CHECK_INTERVAL*100)
+	rte_delay_ms(CHECK_INTERVAL*100);
 
 	nfv_lb_init_fdir();
 

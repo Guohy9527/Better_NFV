@@ -1521,14 +1521,14 @@ txq_burst_empw(struct mlx5_txq_data *txq, struct rte_mbuf **pkts,
 	/* Start processing. */
 	mlx5_tx_complete(txq);
 
-	#if BURST_DETECTION
-	struct ghy_mlx5_data * ghy_lcore;
-	uint32_t lcore_id;
-	lcore_id = rte_lcore_id();
-	ghy_lcore = &mlx5_test[lcore_id];
-	ghy_lcore -> ghy_wqe_pi = txq->wqe_pi;
-	ghy_lcore -> ghy_wqe_ci = txq->wqe_ci;
-	#endif
+	// #if BURST_DETECTION  发包函数最终走这个
+	// struct ghy_mlx5_data * ghy_lcore;
+	// uint32_t lcore_id;
+	// lcore_id = rte_lcore_id();
+	// ghy_lcore = &mlx5_test[lcore_id];
+	// ghy_lcore -> ghy_wqe_pi = txq->wqe_pi;
+	// ghy_lcore -> ghy_wqe_ci = txq->wqe_ci;
+	// #endif
 
 	max_elts = (elts_n - (elts_head - txq->elts_tail));//这是什么意思？ 貌似是txd的大小
 	max_wqe = (1u << txq->wqe_n) - (txq->wqe_ci - txq->wqe_pi);//这代表什么意思？WQ的大小？

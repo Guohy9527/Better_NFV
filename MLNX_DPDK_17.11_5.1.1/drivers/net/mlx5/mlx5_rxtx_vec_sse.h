@@ -103,6 +103,8 @@ txq_wr_dseg_v(struct mlx5_txq_data *txq, __m128i *dseg,
 #endif
 }
 
+int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data);
+
 /**
  * Send multi-segmented packets until it encounters a single segment packet in
  * the pkts list.

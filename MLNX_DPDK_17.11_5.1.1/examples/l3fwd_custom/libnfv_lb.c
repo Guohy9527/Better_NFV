@@ -1,6 +1,5 @@
 #include "libnfv_lb.h"
 
-
 #define MK_FLOW_ITEM(t, s) \
 	[RTE_FLOW_ITEM_TYPE_ ## t] = { \
 		.name = # t, \
@@ -519,7 +518,7 @@ port_flow_flush(uint16_t port_id)
  *
  */
 void 
-nfv_lb_init_fdir()
+nfv_lb_init_fdir(void)
 {
 	uint16_t num = 6;
 	uint8_t selected_queue = 2;
@@ -548,19 +547,19 @@ nfv_lb_init_fdir()
  * 
  *
  */
-int nfv_lb_burst_detection(struct date_from_driver * nic_rxq_data){
-    unsigned int k = 128;
-	uint8_t op_code, op_owner, op_own;
+// int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data){
+//     unsigned int k = 128;
+// 	uint8_t op_code, op_owner, op_own;
 
-    if(nic_rxq_data == NULL)
-        return 0;
+//     if(nic_rxq_data == NULL)
+//         return 0;
 
-	unsigned int pos = (nic_rxq_data->nic_rq_ci - k) & (nic_rxq_data->nic_q_n -1);
-	unsigned int ownership = !!((nic_rxq_data->nic_rq_ci - k) & nic_rxq_data->nic_q_n);
-	op_own = (nic_rxq_data ->nic_cq + pos) ->op_own;
-	op_owner = op_own & 0x1;
-	op_code = op_own >> 4;
-	if ((op_owner != ownership) || (op_code == 0xf))
-		return 0; /* No CQE. */
-	return 1;               
-}
+// 	unsigned int pos = (nic_rxq_data->nic_rq_ci - k) & (nic_rxq_data->nic_q_n -1);
+// 	unsigned int ownership = !!((nic_rxq_data->nic_rq_ci - k) & nic_rxq_data->nic_q_n);
+// 	op_own = (nic_rxq_data ->nic_cq + pos) ->op_own;
+// 	op_owner = op_own & 0x1;
+// 	op_code = op_own >> 4;
+// 	if ((op_owner != ownership) || (op_code == 0xf))
+// 		return 0; /* No CQE. */
+// 	return 1;               
+// }

@@ -35,6 +35,9 @@
 #define __L3_FWD_H__
 
 #include <rte_vect.h>
+#include <stdbool.h>
+#include <rte_flow.h>
+#include <rte_ethdev.h>
 
 #define DO_RFC_1812_CHECKS
 
@@ -82,6 +85,26 @@ struct mbuf_table {
 	struct rte_mbuf *m_table[MAX_PKT_BURST];
 };
 
+struct fdir_table {
+	uint16_t pi;
+	uint16_t ci;
+	uint16_t len;
+	struct rte_mbuf *m_table[16384];
+};
+
+/**<单条flow的描述符.*/
+struct lcore_flow {
+	size_t size; /**< Allocated space including data[]. */
+	struct lcore_flow *next; /**< Next flow in list. */
+	struct lcore_flow *tmp; /**< Temporary linking. */
+	uint32_t id; /**< Flow rule ID. */
+	struct rte_flow *flow; /**< Opaque flow object returned by PMD. */
+	struct rte_flow_attr attr; /**< Attributes. */
+	struct rte_flow_item *pattern; /**< Pattern. */
+	struct rte_flow_action *actions; /**< Actions. */
+	uint8_t data[]; /**< Storage for pattern/actions. */
+};
+
 struct lcore_rx_queue {
 	uint16_t port_id;
 	uint8_t queue_id;
@@ -96,6 +119,13 @@ struct lcore_conf {
 	struct mbuf_table tx_mbufs[RTE_MAX_ETHPORTS];
 	void *ipv4_lookup_struct;
 	void *ipv6_lookup_struct;
+////////////////GHY/////////////////////
+	struct fdir_table fdir_mbufs;
+	struct lcore_flow *flow_list; 
+	uint8_t	fdir_flag;
+	uint32_t src_ip;
+	uint32_t dst_ip;
+////////////////GHY////////////////////
 } __rte_cache_aligned;
 
 extern volatile bool force_quit;

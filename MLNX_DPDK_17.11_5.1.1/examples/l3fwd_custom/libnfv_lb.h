@@ -13,6 +13,7 @@
 #include <rte_mempool.h>
 #include <rte_errno.h>
 #include <rte_common.h>
+#include "l3fwd.h"
 
 
 #define BURST_DECTION 1
@@ -50,7 +51,7 @@ struct data_from_driver{
     uint16_t nic_counter;
 };
 
-int nfv_lb_burst_detection(struct date_from_driver * nic_rxq_data);
+int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data);
 
 void
 flow_item_spec_size(const struct rte_flow_item *item, size_t *size, size_t *pad);
@@ -67,15 +68,21 @@ lcore_flow_new(const struct rte_flow_attr *attr,
             const struct rte_flow_action *actions);
 
 int
-lcore_flow_create(uint16_t port_id, uint16_t lcore_id, uint32_t n, const uint32_t *rule);
+lcore_flow_create(uint16_t port_id, uint16_t lcore_id,
+		 const struct rte_flow_attr *attr,
+		 const struct rte_flow_item *pattern,
+		 const struct rte_flow_action *actions);
 
 int
-generate_ipv4_flow(uint16_t port_id, uint16_t lcore_id, uint32_t rx_q,
-            uint32_t src_ip, uint32_t src_mask,
-            uint32_t dest_ip, uint32_t dest_mask);
+lcore_flow_destroy(uint16_t port_id, uint16_t lcore_id, uint32_t n, const uint32_t *rule);
+
+int
+generate_ipv4_flow(uint16_t port_id, uint16_t lcore_id, uint16_t rx_q,
+		uint32_t src_ip, uint32_t src_mask,
+		uint32_t dest_ip, uint32_t dest_mask);
 
 int port_flow_flush(uint16_t port_id);
 
-void nfv_lb_init_fdir();
+void nfv_lb_init_fdir(void);
 
 #endif

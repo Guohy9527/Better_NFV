@@ -42,7 +42,7 @@ include $(RTE_SDK)/mk/rte.vars.mk
 APP = l3fwd
 
 # all source are stored in SRCS-y
-SRCS-y := main.c l3fwd_lpm.c l3fwd_em.c
+SRCS-y := main.c l3fwd_lpm.c l3fwd_em.c libnfv_lb.c
 
 CFLAGS += -I$(SRCDIR)
 CFLAGS += -O3 $(USER_FLAGS)
