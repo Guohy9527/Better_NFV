@@ -1059,16 +1059,16 @@ main(int argc, char **argv)
 
 #if BURST_DECTION
 
-	rte_delay_ms(CHECK_INTERVAL*100);
+//	rte_delay_ms(CHECK_INTERVAL*100);
 
-	nfv_lb_init_fdir();
+//	nfv_lb_init_fdir();
 
 	while (!force_quit)
 	{
 		rte_delay_ms(CHECK_INTERVAL*10);
 		int n;
 		for(n=0; n<nb_rx_queue; n++){
-			printf("queue:%d  %d    ",2*n+2,mlx5_test[2*n+2].nic_counter);
+			printf("queue:%d  %f    ",2*n+2,mlx5_test[2*n+2].cpu_load);
 		}
 		printf("\n");
 	}

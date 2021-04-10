@@ -43,12 +43,15 @@ struct mlx5_cqe {
 };
 
 struct data_from_driver{
-    unsigned int nic_rq_ci;
-    volatile struct mlx5_cqe * nic_cq;
-    uint16_t nic_q_n;
-    uint16_t nic_wqe_pi;
-    uint16_t nic_wqe_ci;
-    uint16_t nic_counter;
+		unsigned int nic_rq_ci;
+		volatile struct mlx5_cqe * nic_cq;
+		uint16_t nic_q_n;
+		uint16_t nic_wqe_pi;
+		uint16_t nic_wqe_ci;
+		uint16_t nic_counter;
+		double	cpu_load;
+		uint64_t str_tsc,diff_tsc,sum_idle_tsc,pre_tsc;
+		unsigned int idle_flag;
 };
 
 int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data);

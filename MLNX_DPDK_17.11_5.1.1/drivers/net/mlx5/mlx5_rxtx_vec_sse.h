@@ -43,6 +43,7 @@
 #include <rte_mbuf.h>
 #include <rte_mempool.h>
 #include <rte_prefetch.h>
+#include <rte_cycles.h>
 
 #include "mlx5.h"
 #include "mlx5_utils.h"
@@ -681,6 +682,10 @@ int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data){
 	return 1;               
 }
 
+int report_load(){
+	
+}
+
 #endif
 
 /**
@@ -769,9 +774,24 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 	
 	#if BURST_DETECTION
 	struct data_from_driver * queue_status;
+
+	const uint64_t drain_tsc = (rte_get_tsc_hz() + US_PER_S - 1) /
+		US_PER_S * 1000;
+	uint64_t cur_tsc=rte_rdtsc();
+	uint64_t diff_tsc = 0;
 	uint32_t lcore_id;
 	lcore_id = rte_lcore_id();
 	queue_status = &mlx5_test[lcore_id];
+	if(cur_tsc > queue_status->str_tsc)
+		diff_tsc = cur_tsc - queue_status->str_tsc;
+	if(unlikely(diff_tsc>drain_tsc)){
+		queue_status->cpu_load = 1-((double)queue_status->sum_idle_tsc/drain_tsc);
+		queue_status->str_tsc = cur_tsc + drain_tsc*10;
+		queue_status->sum_idle_tsc = 0;
+		
+	}
+
+
 	queue_status -> nic_cq = &(*rxq->cqes)[0];
 	queue_status -> nic_rq_ci = rxq->rq_ci;
 	queue_status -> nic_q_n = q_n;
@@ -803,8 +823,21 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 	pkts_n = RTE_ALIGN_FLOOR(pkts_n - rcvd_pkt, MLX5_VPMD_DESCS_PER_LOOP);
 	/* Not to cross queue end. */
 	pkts_n = RTE_MIN(pkts_n, q_n - elts_idx);
-	if (!pkts_n)
-		return rcvd_pkt;
+	if (!pkts_n){
+#if BURST_DETECTION 
+		if(diff_tsc> 0 && queue_status->idle_flag == 1){
+			diff_tsc = cur_tsc - queue_status->pre_tsc;
+			queue_status->sum_idle_tsc += diff_tsc;
+		}
+		queue_status->pre_tsc = cur_tsc;
+		if(rcvd_pkt == 0)
+			queue_status->idle_flag =1;
+		else
+			queue_status->idle_flag =0;
+#endif
+			return rcvd_pkt;
+	}
+
 	/* At this point, there shouldn't be any remained packets. */
 	assert(rxq->rq_pi == rxq->cq_ci);
 
@@ -1007,8 +1040,21 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 			break;
 	}
 	/* If no new CQE seen, return without updating cq_db. */
-	if (unlikely(!nocmp_n && comp_idx == MLX5_VPMD_DESCS_PER_LOOP))
-		return rcvd_pkt;
+	if (unlikely(!nocmp_n && comp_idx == MLX5_VPMD_DESCS_PER_LOOP)){
+#if BURST_DETECTION 
+		if(diff_tsc> 0 && queue_status->idle_flag == 1){
+			diff_tsc = cur_tsc - queue_status->pre_tsc;
+			queue_status->sum_idle_tsc+=diff_tsc;
+		}
+		queue_status->pre_tsc = cur_tsc;
+		if(rcvd_pkt == 0)
+			queue_status->idle_flag =1;
+		else
+			queue_status->idle_flag =0;
+#endif
+				return rcvd_pkt;
+	}
+
 	/* Update the consumer indexes for non-compressed CQEs. */
 	assert(nocmp_n <= pkts_n);
 	rxq->cq_ci += nocmp_n;
@@ -1034,6 +1080,18 @@ rxq_burst_v(struct mlx5_rxq_data *rxq, struct rte_mbuf **pkts, uint16_t pkts_n,
 	}
 	rte_compiler_barrier();
 	*rxq->cq_db = rte_cpu_to_be_32(rxq->cq_ci);
+
+#if BURST_DETECTION 
+		if(diff_tsc> 0 && queue_status->idle_flag == 1){
+			diff_tsc = cur_tsc - queue_status->pre_tsc;
+			queue_status->sum_idle_tsc+=diff_tsc;
+		}
+		queue_status->pre_tsc = cur_tsc;
+		if(rcvd_pkt == 0)
+			queue_status->idle_flag =1;
+		else
+			queue_status->idle_flag =0;
+#endif
 	return rcvd_pkt;
 }
 

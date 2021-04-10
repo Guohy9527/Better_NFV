@@ -1461,21 +1461,7 @@ mlx5_empw_close(struct mlx5_txq_data *txq, struct mlx5_mpw *mpw)
 
 #if BURST_DETECTION
 
-	struct data_from_driver mlx5_test[12]={
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0},
-		{0, NULL, 0, 0, 0, 0}
-	};
-//	struct ghy_rxq_data * qdetection = mlx5_test;
+	struct data_from_driver mlx5_test[12];
 #endif
 
 /**
