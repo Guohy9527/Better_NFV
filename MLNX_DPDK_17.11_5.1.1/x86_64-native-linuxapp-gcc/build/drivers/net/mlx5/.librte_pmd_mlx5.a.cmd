@@ -1,1 +1,0 @@
-cmd_librte_pmd_mlx5.a = ar crDs librte_pmd_mlx5.a mlx5.o mlx5_glue.o mlx5_rxq.o mlx5_txq.o mlx5_rxtx.o mlx5_rxtx_vec.o mlx5_trigger.o mlx5_ethdev.o mlx5_nl.o mlx5_mac.o mlx5_rxmode.o mlx5_vlan.o mlx5_stats.o mlx5_rss.o mlx5_mr.o mlx5_flow.o mlx5_flow_dv.o mlx5_flow_verbs.o mlx5_socket.o mlx5_devx_cmds.o mlx5_flow_meter.o 

@@ -1,1 +1,0 @@
-/home/ghy/work/better_NFV/MLNX_DPDK_17.11_5.1.1/lib/librte_eal/linuxapp/kni/Makefile
