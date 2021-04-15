@@ -1066,11 +1066,21 @@ main(int argc, char **argv)
 	while (!force_quit)
 	{
 		rte_delay_ms(CHECK_INTERVAL*10);
-		int n;
+		int n=0;
+		double average_load=0,sum_load_imbalance=0,cur_lod=0,diff=0;
 		for(n=0; n<nb_rx_queue; n++){
-			printf("queue:%d  %f    ",2*n+2,mlx5_test[2*n+2].cpu_load);
+			average_load += mlx5_test[2*n+2].cpu_load;
 		}
-		printf("\n");
+			average_load = average_load/n;
+		for(n=0; n<nb_rx_queue; n++){
+			cur_lod = mlx5_test[2*n+2].cpu_load;
+			diff = fabs(cur_lod-average_load);
+			sum_load_imbalance +=  diff*diff;
+			printf("queue:%d  %f    ",2*n+2,mlx5_test[2*n+2].cpu_load);//默认启动方式从第2号core开始
+		}
+
+		printf("average: %f,load_imbalance: %.8lf%\n",average_load,sum_load_imbalance*100);
+		
 	}
 
 #endif
