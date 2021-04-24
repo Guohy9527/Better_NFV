@@ -79,8 +79,8 @@
 /*
  * Configurable number of RX/TX ring descriptors
  */
-#define RTE_TEST_RX_DESC_DEFAULT 128
-#define RTE_TEST_TX_DESC_DEFAULT 512
+#define RTE_TEST_RX_DESC_DEFAULT 4096
+#define RTE_TEST_TX_DESC_DEFAULT 4096
 
 #define MAX_TX_QUEUE_PER_PORT RTE_MAX_ETHPORTS
 #define MAX_RX_QUEUE_PER_PORT 128
@@ -837,6 +837,8 @@ prepare_ptype_parser(uint16_t portid, uint16_t queueid)
 	return 0;
 }
 
+extern struct data_from_driver mlx5_test[12];
+
 int
 main(int argc, char **argv)
 {
@@ -1050,12 +1052,59 @@ main(int argc, char **argv)
 
 	ret = 0;
 	/* launch per-lcore init on every lcore */
-	rte_eal_mp_remote_launch(l3fwd_lkp.main_loop, NULL, CALL_MASTER);
+	rte_eal_mp_remote_launch(l3fwd_lkp.main_loop, NULL, SKIP_MASTER);
+
+
+	while(!force_quit){
+		rte_delay_ms(CHECK_INTERVAL*10);
+
+
+		int n=0;
+		double average_load=0,sum_load_imbalance=0,cur_lod=0,diff=0;
+		for(n=0; n<nb_rx_queue; n++){
+			average_load += mlx5_test[2*n+2].cpu_load;
+		}
+			average_load = average_load/n;
+		for(n=0; n<nb_rx_queue; n++){
+			cur_lod = mlx5_test[2*n+2].cpu_load;
+			diff = fabs(cur_lod-average_load);
+			sum_load_imbalance +=  diff*diff;
+			printf("queue:%d  %.4f  ",2*n+2,mlx5_test[2*n+2].cpu_load);//默认启动方式从第2号core开始
+		}
+		printf("\naverage: %.4f,load_imbalance: %.4lf%\n",average_load,sum_load_imbalance*100);
+	}
+
+
+
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
 		if (rte_eal_wait_lcore(lcore_id) < 0) {
 			ret = -1;
 			break;
 		}
+	}
+
+	struct rte_eth_stats stats_test;
+	uint16_t portid_test = 0;
+	rte_eth_stats_get(portid_test,&stats_test);
+	printf("  RX-packets: %-10"PRIu64"  RX-errors:  %-10"PRIu64
+	       "  RX-bytes:  %-10"PRIu64"\n", stats_test.ipackets, stats_test.ierrors,
+	       stats_test.ibytes);
+	printf("  RX-nombuf:  %-10"PRIu64"\n", stats_test.rx_nombuf);
+	printf("  RX-imissed:  %-10"PRIu64"\n", stats_test.imissed);
+	printf("  TX-packets: %-10"PRIu64"  TX-errors:  %-10"PRIu64
+	       "  TX-bytes:  %-10"PRIu64"\n", stats_test.opackets, stats_test.oerrors,
+	       stats_test.obytes);
+
+	printf("\n");
+
+	int i_test;
+	// portid = 0;
+	// nb_rx_queue = get_port_n_rx_queues(portid);  //获取总队列数
+	for (i_test = 0; i_test < nb_rx_queue; i_test++) {
+		printf("  Stats reg %2d RX-packets: %-10"PRIu64
+		       "  RX-errors: %-10"PRIu64
+		       "  RX-bytes: %-10"PRIu64"\n",
+		       i_test, stats_test.q_ipackets[i_test], stats_test.q_errors[i_test], stats_test.q_ibytes[i_test]);
 	}
 
 	/* stop ports */

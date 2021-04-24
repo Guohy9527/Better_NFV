@@ -44,7 +44,7 @@
 #define NO_HASH_MULTI_LOOKUP 1
 #endif
 
-#define MAX_PKT_BURST     32
+#define MAX_PKT_BURST     64
 #define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */
 
 #define MAX_RX_QUEUE_PER_LCORE 16
@@ -237,5 +237,41 @@ lpm_get_ipv4_l3fwd_lookup_struct(const int socketid);
 
 void *
 lpm_get_ipv6_l3fwd_lookup_struct(const int socketid);
+
+struct mlx5_cqe {
+    #if (RTE_CACHE_LINE_SIZE == 128)
+        uint8_t padding[64];
+    #endif
+    uint8_t pkt_info;
+    uint8_t rsvd0;
+    uint16_t wqe_id;
+    uint8_t rsvd5[8];
+    uint32_t rx_hash_res;
+    uint8_t rx_hash_type;
+    uint8_t rsvd1[11];
+    uint16_t hdr_type_etc;
+    uint16_t vlan_info;
+    uint8_t rsvd2[4];
+    uint32_t metadata;
+    uint8_t rsvd3[4];
+    uint32_t byte_cnt;
+    uint64_t timestamp;
+    uint32_t sop_drop_qpn;
+    uint16_t wqe_counter;
+    uint8_t rsvd4;
+    uint8_t op_own;
+};
+
+struct data_from_driver{
+		unsigned int nic_rq_ci;
+		volatile struct mlx5_cqe * nic_cq;
+		uint16_t nic_q_n;
+		uint16_t nic_wqe_pi;
+		uint16_t nic_wqe_ci;
+		uint16_t nic_counter;
+		double	cpu_load;
+		uint64_t str_tsc,diff_tsc,sum_idle_tsc,pre_tsc;
+		unsigned int idle_flag;
+};
 
 #endif  /* __L3_FWD_H__ */

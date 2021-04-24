@@ -95,5 +95,8 @@ nfv_init_fdir();
 // uint16_t 
 // queue_burst_status(struct ghy_mlx5_data * ghy_rxq_data);
 
+void
+report_cpu_load(uint8_t nb_rx_queue);
+
 
 #endif

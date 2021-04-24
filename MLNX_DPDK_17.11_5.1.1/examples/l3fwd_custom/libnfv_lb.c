@@ -563,3 +563,48 @@ nfv_lb_init_fdir(void)
 // 		return 0; /* No CQE. */
 // 	return 1;               
 // }
+
+// uint16_t nfv_lb_queue_size_check(struct data_from_driver * nic_rxq_data){
+// 	uint8_t op_code, op_owner, op_own;
+// 	uint16_t counter;
+// 	uint16_t n;
+
+// 	if(nic_rxq_data == NULL)
+// 		return 0;
+
+// 	for(n=0; n<nic_rxq_data->nic_q_n; n++){
+// 		unsigned int pos = (nic_rxq_data->nic_rq_ci - n) & (nic_rxq_data->nic_q_n -1);
+// 		unsigned int ownership = !!((nic_rxq_data->nic_rq_ci - n) & nic_rxq_data->nic_q_n);	
+// 		op_own = (nic_rxq_data ->nic_cq + pos) ->op_own;
+// 		op_owner = op_own & 0x1;
+// 		op_code = op_own >> 4;
+// 		if ((op_owner != ownership) || (op_code == 0xf))
+// 			continue; /* No CQE. */
+// 		else 
+// 			break;
+// 	}
+// 	return nic_rxq_data->nic_q_n - n;
+// }
+
+void solver(void){
+	unsigned int a,b;
+	srand((unsigned)rte_rdtsc());
+	a = rand()%100;
+	if(a<=85){
+		if(a<=10)
+		{
+			b=rand()%20;
+			rte_delay_us(b);
+		}
+		else{
+			b =rand()%15+20;
+			rte_delay_us(b);
+		}
+
+	}
+	else{
+		b = rand()%35+35;
+		rte_delay_us(b);
+	}
+
+}

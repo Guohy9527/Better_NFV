@@ -663,7 +663,7 @@ extern struct data_from_driver mlx5_test[12];
 /**
  * 函数的作用：检测队列已收包个数
  * 
- * 返回值：队列当前空置包个数
+ * 返回值：队列当前是否超过设置阈值
  */
 int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data){
     unsigned int k = 128;
@@ -680,6 +680,33 @@ int nfv_lb_burst_detection(struct data_from_driver * nic_rxq_data){
 	if ((op_owner != ownership) || (op_code == 0xf))
 		return 0; /* No CQE. */
 	return 1;               
+}
+
+/**
+ * 函数的作用：检测队列已收包个数
+ * 
+ * 返回值：队列当前空置包个数
+ */
+uint16_t nfv_lb_queue_size_check(struct data_from_driver * nic_rxq_data){
+	uint8_t op_code, op_owner, op_own;
+	uint16_t counter;
+	uint16_t n;
+
+	if(nic_rxq_data == NULL)
+		return 0;
+
+	for(n=0; n<nic_rxq_data->nic_q_n; n++){
+		unsigned int pos = (nic_rxq_data->nic_rq_ci - n) & (nic_rxq_data->nic_q_n -1);
+		unsigned int ownership = !!((nic_rxq_data->nic_rq_ci - n) & nic_rxq_data->nic_q_n);	
+		op_own = (nic_rxq_data ->nic_cq + pos) ->op_own;
+		op_owner = op_own & 0x1;
+		op_code = op_own >> 4;
+		if ((op_owner != ownership) || (op_code == 0xf))
+			continue; /* No CQE. */
+		else 
+			break;
+	}
+	return nic_rxq_data->nic_q_n - n;
 }
 
 int report_load(){

@@ -17,6 +17,8 @@
 
 
 #define BURST_DECTION 1
+#define CHECK_QUEUE_OCCUPANCY 0
+#define CHECK_COMPUTING_TIME 0
 
 struct mlx5_cqe {
     #if (RTE_CACHE_LINE_SIZE == 128)
@@ -87,5 +89,9 @@ generate_ipv4_flow(uint16_t port_id, uint16_t lcore_id, uint16_t rx_q,
 int port_flow_flush(uint16_t port_id);
 
 void nfv_lb_init_fdir(void);
+
+// uint16_t nfv_lb_queue_size_check(struct data_from_driver * nic_rxq_data);
+
+void solver(void);
 
 #endif

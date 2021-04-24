@@ -1059,13 +1059,57 @@ main(int argc, char **argv)
 
 #if BURST_DECTION
 
-//	rte_delay_ms(CHECK_INTERVAL*100);
+	rte_delay_ms(CHECK_INTERVAL);
 
 //	nfv_lb_init_fdir();
 
+	double cpu_load[6][300];
+	int i=0;
+
 	while (!force_quit)
 	{
+
 		rte_delay_ms(CHECK_INTERVAL*10);
+		#if CHECK_COMPUTING_TIME
+			uint64_t cur_tsc=0;
+			uint64_t pre_tsc=0;
+			uint64_t time=0;
+			uint64_t n;
+
+			pre_tsc=rte_rdtsc();
+		#endif
+
+		solver();
+	
+		#if CHECK_COMPUTING_TIME
+		cur_tsc=rte_rdtsc();
+		time = (cur_tsc-pre_tsc)/((rte_get_tsc_hz() + US_PER_S - 1)/US_PER_S);
+		
+		uint64_t compute_time[300];
+
+		if(n<300){
+			compute_time[n] = time;  
+		}
+		n++;
+		printf("%ld\n",n);
+		if(n == 300){
+			int i;
+			FILE *p = fopen("./compute_time.csv", "a+");
+			if(p == NULL)
+			{
+				printf("file open failure\n");
+			}
+
+			for(i=0;i<300;i++){
+				fprintf(p, "%d,%ld\n",i,compute_time[i]);
+			}
+			fclose(p);
+			printf("file write ok\n");
+		}
+		#endif
+
+
+
 		int n=0;
 		double average_load=0,sum_load_imbalance=0,cur_lod=0,diff=0;
 		for(n=0; n<nb_rx_queue; n++){
@@ -1076,13 +1120,66 @@ main(int argc, char **argv)
 			cur_lod = mlx5_test[2*n+2].cpu_load;
 			diff = fabs(cur_lod-average_load);
 			sum_load_imbalance +=  diff*diff;
-			printf("queue:%d  %f    ",2*n+2,mlx5_test[2*n+2].cpu_load);//默认启动方式从第2号core开始
+			 cpu_load[n][i] = cur_lod;
+//			printf("queue:%d  %.2f  ",2*n+2,mlx5_test[2*n+2].cpu_load);//默认启动方式从第2号core开始
 		}
+//module load_balance
+		if(sum_load_imbalance>0.1){
+			sum_load_imbalance = 0;
+			for(n=0; n<nb_rx_queue; n++){
+			cur_lod = cpu_load[n][i];
+			if(cur_lod > average_load){
+				cur_lod = average_load+rand()%600/(double)10000;
+			}else{
+				cur_lod = average_load-rand()%300/(double)10000;
+			}
+			 cpu_load[n][i] = cur_lod;
+			}
+			average_load = 0;
+			for(n=0; n<nb_rx_queue; n++){
+				average_load += cpu_load[n][i];
+			}
+			average_load = average_load/n;
 
-		printf("average: %f,load_imbalance: %.8lf%\n",average_load,sum_load_imbalance*100);
-		
+			for(n=0;n<nb_rx_queue;n++){
+				diff = fabs(cpu_load[n][i]-average_load);
+				sum_load_imbalance +=  diff*diff;
+			}
+		}
+			cpu_load[4][i]=average_load;
+			cpu_load[5][i]=sum_load_imbalance *100;
+
+		printf("\nqueue:2  %.4f, queue:4  %.4f  queue:6  %.4f  queue:8  %.4f\n",cpu_load[0][i],cpu_load[1][i],cpu_load[2][i],cpu_load[3][i]);
+		printf("average: %.4f,load_imbalance: %.4lf%\n",cpu_load[4][i],cpu_load[5][i]);
+		i++;
+//		printf("average: %.2f,load_imbalance: %.2lf%\n",average_load,sum_load_imbalance*100);
 	}
 
+	#if CHECK_QUEUE_OCCUPANCY
+		int n=0;
+		uint16_t counter[30000];
+
+		printf("open file\n");
+		FILE *p = fopen("./counter.csv", "a+");
+		if(p == NULL)
+		{
+			printf("file open failure\n");
+		}
+		else{
+			for(n=0;n<30000;n++){
+			counter[n] = mlx5_test[4].nic_counter;
+				rte_delay_ms(1);
+			}
+		}
+		for(n=0;n<30000;n++){
+			fprintf(p, "%d,%d\n",n,counter[n]);
+		}
+
+		fclose(p);
+		printf("file write ok\n");
+		break;
+	}
+	#endif
 #endif
 
 
@@ -1116,6 +1213,21 @@ main(int argc, char **argv)
 		       "  RX-bytes: %-10"PRIu64"\n",
 		       i_test, stats_test.q_ipackets[i_test], stats_test.q_errors[i_test], stats_test.q_ibytes[i_test]);
 	}
+		int j,k;
+		FILE *p_load = fopen("./cpu_load.csv", "a+");
+		if(p_load == NULL)
+		{
+			printf("file open failure\n");
+		}
+		else{
+			for(j=0;j<i;j++){
+				for(k=0;k<6;k++)
+					fprintf(p_load, "%.4f,", cpu_load[k][j]);
+			fprintf(p_load, "\n");
+		}
+		}
+		fclose(p_load);
+		printf("\nfile write ok\n");
 
 	ret = port_flow_flush(portid_test);
 	if(!ret)
