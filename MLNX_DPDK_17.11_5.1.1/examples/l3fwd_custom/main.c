@@ -1065,6 +1065,7 @@ main(int argc, char **argv)
 
 	double cpu_load[6][300];
 	int i=0;
+	int fdir_flag = 1;
 
 	while (!force_quit)
 	{
@@ -1123,8 +1124,16 @@ main(int argc, char **argv)
 			 cpu_load[n][i] = cur_lod;
 //			printf("queue:%d  %.2f  ",2*n+2,mlx5_test[2*n+2].cpu_load);//默认启动方式从第2号core开始
 		}
+
+
+
 //module load_balance
 		if(sum_load_imbalance>0.1){
+			if(fdir_flag == 1){
+//				nfv_lb_create_fdir_rule1();
+				nfv_lb_create_fdir_rule2();
+				fdir_flag = 0;
+			}
 			sum_load_imbalance = 0;
 			for(n=0; n<nb_rx_queue; n++){
 			cur_lod = cpu_load[n][i];

@@ -1071,7 +1071,7 @@ main(int argc, char **argv)
 			sum_load_imbalance +=  diff*diff;
 			printf("queue:%d  %.4f  ",2*n+2,mlx5_test[2*n+2].cpu_load);//默认启动方式从第2号core开始
 		}
-		printf("\naverage: %.4f,load_imbalance: %.4lf%\n",average_load,sum_load_imbalance*100);
+		printf("\naverage: %.4f,load_imbalance: %.4lf%\n\n",average_load,sum_load_imbalance*100);
 	}
 
 

@@ -90,6 +90,10 @@ int port_flow_flush(uint16_t port_id);
 
 void nfv_lb_init_fdir(void);
 
+void nfv_lb_create_fdir_rule1(void);
+
+void nfv_lb_create_fdir_rule2(void);
+
 // uint16_t nfv_lb_queue_size_check(struct data_from_driver * nic_rxq_data);
 
 void solver(void);

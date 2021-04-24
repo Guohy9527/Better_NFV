@@ -522,8 +522,8 @@ nfv_lb_init_fdir(void)
 {
 	uint16_t num = 6;
 	uint8_t selected_queue = 2;
-	uint32_t src_ip = (2<<24) + (2<<16) + (2<<8) + 4;
-	uint32_t dst_ip = (2<<24) + (2<<16) + (2<<8) + 6;
+	uint32_t src_ip = (2<<24) + (0<<16) + (2<<8) + 1;
+	uint32_t dst_ip = (2<<24) + (0<<16) + (2<<8) + 2;
 	uint32_t src_mask = 0x0;
 	uint32_t dst_mask = 0xffffffff;
 	uint16_t port_id = 0;
@@ -540,6 +540,54 @@ nfv_lb_init_fdir(void)
 		else
 			printf("flow rule %d created!\n",lcore_conf[num].flow_list->id);
 	}
+}
+
+/**
+ * 函数的作用：测试下发函数，在初始化的时候下发100条规则测试是否正常；
+ * fdir最开始的几条规则下发时间远大于平均时间，为消除影响，在初始化的时候先下发一部分规则以减少影响
+ * 
+ *
+ */
+void 
+nfv_lb_create_fdir_rule1(void)
+{
+	uint16_t num = 6;
+	uint8_t selected_queue = 2;
+	uint32_t src_ip = (2<<24) + (2<<16) + (3<<8) + 1;
+	uint32_t dst_ip = (2<<24) + (2<<16) + (3<<8) + 2;
+	uint32_t src_mask = 0xffffff00;
+	uint32_t dst_mask = 0x0;
+	uint16_t port_id = 0;
+	int res, cout;
+
+		res = generate_ipv4_flow(port_id, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
+		if(res)
+		{
+			rte_exit(EXIT_FAILURE, "error in creating flow");
+		}
+		else
+			printf("\nflow rule %d created!\n\n\n",lcore_conf[num].flow_list->id);
+}
+
+void 
+nfv_lb_create_fdir_rule2(void)
+{
+	uint16_t num = 6;
+	uint8_t selected_queue = 2;
+	uint32_t src_ip = (2<<24) + (2<<16) + (3<<8) + 1;
+	uint32_t dst_ip = (2<<24) + (2<<16) + (3<<8) + 2;
+	uint32_t src_mask = 0xffffff00;
+	uint32_t dst_mask = 0x0;
+	uint16_t port_id = 0;
+	int res, cout;
+
+		res = generate_ipv4_flow(port_id, num, selected_queue, src_ip, src_mask,dst_ip, dst_mask);
+		if(res)
+		{
+			rte_exit(EXIT_FAILURE, "error in creating flow");
+		}
+		else
+			printf("\nflow rule %d created!\n\n\n",lcore_conf[num].flow_list->id);
 }
 
 /**
